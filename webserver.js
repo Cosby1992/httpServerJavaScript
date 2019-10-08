@@ -1,12 +1,46 @@
 
 var http = require('http');
-var timestamp = require('./dato.js');
+var fs = require('fs');
+var dato = require('./dato.js');
 
-//create a server object:
+var obj = {};
+
+
+readcounter = () => { 
+
+  let rawdata = fs.readFileSync('./counter.json');
+  obj = JSON.parse(rawdata);
+
+  if(JSON.stringify(obj) === {} ){
+    obj.count = 0;
+  } 
+
+  console.log("read: " + obj.count);
+
+}
+
+writecounter = () => {
+obj.count += 1;
+
+console.log("write: " + obj.count);
+
+let data = JSON.stringify(obj);
+fs.writeFileSync('./counter.json', data);
+
+
+}
+
 http.createServer(function (req, res) {
 
-  res.write('Now = ' + timestamp.myDateTime()); //write a response to the client
-  res.end(); //end the response
-}).listen(8080); //the server object listens on port 8080
+  if (req.url != '/favicon.ico') {
+    readcounter();
+    writecounter();
 
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    console.log("server: " + obj.count);
+    res.write("You are visitor number " + obj.count +
+    "<br>Datoen i dag er: " + dato.myDateTime());
+    res.end();
+  }
 
+}).listen(8080);
